@@ -53,7 +53,10 @@ class Form extends Component{
 class ChannelSelect extends Component{
   constructor(props){
     super(props);
+    console.log(props);
     this.state = {
+      teamName: props.teamName,
+      teamIcon: props.teamIcon,
       channels: props.channels
     };
     this.handleRadioClick = this.handleRadioClick.bind(this);
@@ -77,6 +80,10 @@ class ChannelSelect extends Component{
   render(){
     return(
       <div className="channel-select-form-container">
+        <div className="team-info">
+          <img src={this.props.teamIcon} alt={this.props.teamName}/>
+          <h2 className="team-name">{this.props.teamName}</h2>
+        </div>
         <form className="channel-select-form">
           {
             this.state.channels.map(channel => {
@@ -104,7 +111,10 @@ class ChannelSelect extends Component{
 class App extends Component{
   constructor(props){
     super(props);
+
     this.state = {
+      teamName: "",
+      teamIcon: "",
       channels: []
     };
 
@@ -119,17 +129,25 @@ class App extends Component{
     //プロセス間通信で実行する処理を定義
     eventDispatcher = (data) => {
       if(data != null){
+        //配列の初期化
+        this.state.channels.length = 0;
+        
+        //チャンネルリスト
         for(let i = 0; i < data.channels.length; i++){
           this.state.channels.push({
             id:      data.channels[i].id,
             name:    data.channels[i].name,
-            checked: i == 0 ? true: false
+            checked: i == 0 ? true　: false
           });
         }
 
         this.setState({
+          teamName: data.teamName,
+          teamIcon: data.teamIcon,
           channels: this.state.channels
         });
+
+        console.log(this.state);
       }else{
         console.log("Received Null.");
       }
@@ -147,7 +165,10 @@ class App extends Component{
       <main id="app">
         <Form handleBlur={this.handleBlur} />
         <h1>hogehoge</h1>
-        <ChannelSelect channels={this.state.channels} />
+        <ChannelSelect
+        teamName={this.state.teamName}
+        teamIcon={this.state.teamIcon}
+        channels={this.state.channels} />
       </main>
     )
   }
