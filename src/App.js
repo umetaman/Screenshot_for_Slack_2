@@ -1,29 +1,56 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from "react";
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Edited by umetaman.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+function show(msg){
+  console.log(msg);
+}
+
+class ApiForm extends React.Component{
+
+  constructor(props){
+    super(props);
+
+    //フォームから受け取って保存する値
+    this.state = {
+      key: ""
+    };
+  }
+
+  handleFocus = (event) => {
+    console.log("Focus.");
+  }
+
+  handleChange = (event) => {
+    this.setState({
+      key: event.target.value
+    });
+  }
+
+  handleBlur = (event) => {
+    event.preventDefault();
+    show("Submit: " + this.state.key);
+  }
+
+  render(){
+    return(
+      <div className="api-key-form">
+        <label>Input your legacy API key.
+          <input type="text" value={this.state.key} onChange={this.handleChange} onFocus={this.handleFocus} onBlur={this.handleBlur}/>
+        </label>
+      </div>
+    )
+  }
+}
+
+class App extends Component{
+  render(){
+    return(
+      <div className="App">
+        <h1>Slack Legacy API</h1>
+        <ApiForm />
+      </div>
+    )
+  }  
 }
 
 export default App;

@@ -28,6 +28,8 @@ function createWindow(){
     // デバッグ中: ローカルサーバーを読み込む
     // アプリケーション: ビルドされたHTMLを読み込む
     mainWindow.loadURL(isDev ? "http://localhost:3000" : `file://${path.join(__dirname, "../build/index.html")}`);
+    mainWindow.webContents.openDevTools();
+
     mainWindow.on("minimize", (event) => {
         event.preventDefault();
         mainWindow.hide();
