@@ -1,14 +1,14 @@
 "use strict";
-var electron = require("electron");
+var electron = window.nodeRequire("electron");
 var desktopCapture = electron.desktopCapturer;
 //設定の読み込み
-var Config = require("electron-config");
+var Config = window.nodeRequire("electron-config");
 var config = new Config();
 //ファイルの入出力とアップロード
-var fs = require("fs");
-var os = require("os");
-var path = require("path");
-var request = require("request");
+var fs = window.nodeRequire("fs");
+var os = window.nodeRequire("os");
+var path = window.nodeRequire("path");
+var request = window.nodeRequire("request");
 //===============================================
 // プロセス間通信でショートカットの信号を受け取ったらキャプチャ
 var ipcRenderer = electron.ipcRenderer;
@@ -114,3 +114,9 @@ function saveScreenImage() {
     //ここまで来たらエラーなので、空の文字列を返す
     return savePath;
 }
+
+
+//デバッグ
+ipcRenderer.on("debug-console-log", (event, arg) => {
+    console.log(arg);
+});

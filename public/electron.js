@@ -8,6 +8,7 @@ const ipcMain = electron.ipcMain;
 
 const path = require("path");
 const isDev = require("electron-is-dev");
+const request = require("request");
 
 let mainWindow;
 let mainTray;
@@ -101,13 +102,87 @@ app.on("ready", () => {
     // 初期状態では非表示
     mainWindow.hide();
 });
+
 app.on("window-all-closed", () => {
     if(process.platform !== "darwin"){
         app.quit();
     }
 });
+
 app.on("activate", () => {
     if(mainWindow == null){
         createWindow();
     }
-})
+});
+
+//レンダラープロセスからの受取
+ipcMain.on("input-api-token", (event, arg) => {
+    const CHANNEL_LIST_URL = "https://slack.com/api/channels.list";
+    const TEAM_INFO_URL = "https://slack.com/api/team.info";
+    
+    let options = {
+        url: "",
+        formData: {
+            token: arg
+        }
+    };
+
+    let data = {
+        ok: {
+            teamInfo: false,
+            channelList: false
+        },
+        teamName: "",
+        teamIcon: "",
+        channels: []
+    };
+
+    //チーム名とアイコンを取得
+    options.url = TEAM_INFO_URL;
+    request.post(options, (error, response) => {
+        if(error){
+            console.log(error);
+            return;
+        }
+
+        const _res = JSON.parse(response.body);
+        data.ok.teamInfo = _res.ok;
+
+        //OK以外のレスポンスは無視
+        if(_res.ok == true){
+            console.log("get response");
+            data.teamName = _res.team.name;
+            data.teamIcon = _res.team.icon.image_68;
+        }
+    });
+
+    //チャンネル一覧を取得
+    options.url = CHANNEL_LIST_URL;
+    request.post(options, (error, response) => {
+        if(error){
+            console.log(error);
+            return;
+        }
+
+        const _res = JSON.parse(response.body);
+        data.ok.channelList = _res.ok;
+
+        //きちんと初期化
+        data.channels = [];
+
+        //OK以外のレスポンスは無視
+        if(_res.ok == true){
+            _res.channels.forEach(channel => {
+                data.channels.push({ id: channel.id, name: channel.name });
+            });
+        }
+    });
+
+    setTimeout(() => {
+        console.log(data);
+        if(data.ok.teamInfo && data.ok.channelList){
+            event.reply("receive-data", data);
+        }
+    }, 1000);
+    
+});

@@ -1,6 +1,6 @@
 "use strict";
-var electron = require("electron");
-var Config = require("electron-config");
+var electron = window.nodeRequire("electron");
+var Config = window.nodeRequire("electron-config");
 var config = new Config();
 var ipcRenderer = electron.ipcRenderer;
 function saveConfig(apiKey, channelID) {
