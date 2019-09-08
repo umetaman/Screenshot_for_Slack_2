@@ -10,6 +10,9 @@ const path = require("path");
 const isDev = require("electron-is-dev");
 const request = require("request");
 
+const Config = require("electron-config");
+const config = new Config();
+
 let mainWindow;
 let mainTray;
 let isQuiting = false;
@@ -33,8 +36,14 @@ function createWindow(){
 
     mainWindow.on("minimize", (event) => {
         event.preventDefault();
+        sendSaveConfigSignal();
         mainWindow.hide();
     })
+
+    mainWindow.on("close", (event) => {
+        sendSaveConfigSignal();
+    })
+
     mainWindow.on("closed", (event) => {
         if(isQuiting == false){
             event.preventDefault();
@@ -84,10 +93,16 @@ function createWindowMenu(){
 }
 
 function sendSaveConfigSignal(){
+    console.log("send save signal");
     mainWindow.webContents.send("save-config", "save config.");
 }
 
 app.on("ready", () => {
+    //デバッグ
+    ipcMain.on("debug-console-log-main", (event, arg) => {
+        console.log(arg);
+    })
+
     //ショートカットの作成
     globalShortcut.register(
         "CommandOrControl+Shift+M",

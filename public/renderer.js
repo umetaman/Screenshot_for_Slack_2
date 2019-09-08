@@ -9,6 +9,7 @@ var fs = window.nodeRequire("fs");
 var os = window.nodeRequire("os");
 var path = window.nodeRequire("path");
 var request = window.nodeRequire("request");
+
 //===============================================
 // プロセス間通信でショートカットの信号を受け取ったらキャプチャ
 var ipcRenderer = electron.ipcRenderer;
@@ -16,6 +17,7 @@ ipcRenderer.on("ctrl-shift-m", function (arg) {
     console.log("caught shortcut command!");
     saveScreenImage();
 });
+
 //===============================================
 //OSの通知
 function notifyScreenshot(msg, imagePath) {
@@ -101,8 +103,11 @@ function saveScreenImage() {
                         console.log(error);
                         return;
                     }
-                    var _a = config.get("apiElements"), apiKey = _a.apiKey, channelID = _a.channelID;
-                    var slack = new SlackAPI(apiKey, channelID);
+                    
+                    const token = config.get("token");
+                    const id = config.get("id");
+
+                    var slack = new SlackAPI(token, id);
                     slack.postImage(savePath, imageFileName_1);
                     //通知を出すHTMLのAPI
                     notifyScreenshot("Saved current main screen.", savePath);
@@ -115,8 +120,29 @@ function saveScreenImage() {
     return savePath;
 }
 
+let tokenObj, channelIdObj;
+
+// 画面の読み込みが済んだらElementを取得
+window.onload = () => {
+    tokenObj = document.querySelector("#input_token");
+    channelIdObj = document.channel_select_form;
+}
+
 
 //デバッグ
 ipcRenderer.on("debug-console-log", (event, arg) => {
     console.log(arg);
+});
+
+//チャンネルのIDを保存
+ipcRenderer.on("save-config", (event, arg) => {
+    config.set("token", tokenObj.value);
+    
+    for(let i = 0; i < channelIdObj.channels.length - 1; i++){
+        if(channelIdObj.channels[i].checked){
+            config.set("id", channelIdObj.channels[i].value);
+            ipcRenderer.send("debug-console-log-main", "saved: " + channelIdObj.channels[i].value);
+            break;
+        }
+    }
 });
