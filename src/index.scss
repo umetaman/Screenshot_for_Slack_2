@@ -1,0 +1,52 @@
+*{
+    box-sizing: border-box;
+}
+
+html, body{
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    background: #eeeeee;
+}
+
+div#root > main#app{
+    margin: 10px;
+    padding: 10px;
+
+    div.input-token-form{
+        input#input_token{
+            font-size: 16px;
+            width: 100%;
+            height: 40px;
+
+            margin-bottom: 20px;
+            padding: 3px 10px;
+            border-radius: 5px;
+            border: 2px red solid;
+        }
+    }
+
+    div.channel-select-form-container{
+        div.team-info{
+            display: flex;
+            flex-direction: row;
+
+            img{
+                width: 50px;
+                height: 50px;
+                margin-right: 15px;
+                border-radius: 5px;
+            }
+
+            h2.team-name{
+                margin: auto 0;
+            }
+        }
+
+        form.channel-select-form{
+            margin: 15px 0;
+        }
+    }
+}

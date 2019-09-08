@@ -37,14 +37,15 @@ export default class Form extends Component {
     render() {
         return (
             <div className="input-token-form">
-                <label>Paste your Slack Lagacy token.</label>
                 <input
                     type="text"
                     name="token"
                     id="input_token"
                     value={this.state.token}
                     onChange={this.handleChange}
-                    onBlur={this.handleBlur} />
+                    onBlur={this.handleBlur}
+                    placeholder="Paste your Slack LegacyAPI token."
+                    />
             </div>
         )
     }
