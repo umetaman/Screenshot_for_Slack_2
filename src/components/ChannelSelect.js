@@ -37,31 +37,35 @@ export default class ChannelSelect extends Component {
     }
 
     render() {
-        return (
-            <div className="channel-select-form-container">
-                <div className="team-info">
-                    <img src={this.props.teamIcon} alt={this.props.teamName} />
-                    <h2 className="team-name">{this.props.teamName}</h2>
+        if(this.props.teamIcon != null && this.props.teamName != null && this.props.channels.length > 1){
+            return (
+                <div className="channel-select-form-container">
+                    <div className="team-info">
+                        <img src={this.props.teamIcon} alt={this.props.teamName} />
+                        <h2 className="team-name">{this.props.teamName}</h2>
+                    </div>
+                    <form name="channel_select_form" className="channel-select-form">
+                        {
+                            this.state.channels.map(channel => {
+                                return (
+                                    <label key={channel.id}>
+                                        <input
+                                            type="radio"
+                                            name="channels"
+                                            value={channel.id}
+                                            checked={channel.checked}
+                                            onChange={this.handleRadioClick}
+                                        />
+                                        {channel.name}<br />
+                                    </label>
+                                );
+                            })
+                        }
+                    </form>
                 </div>
-                <form name="channel_select_form" className="channel-select-form">
-                    {
-                        this.state.channels.map(channel => {
-                            return (
-                                <label key={channel.id}>
-                                    <input
-                                        type="radio"
-                                        name="channels"
-                                        value={channel.id}
-                                        checked={channel.checked}
-                                        onChange={this.handleRadioClick}
-                                    />
-                                    {channel.name}<br />
-                                </label>
-                            );
-                        })
-                    }
-                </form>
-            </div>
-        )
+            )
+        }else{
+            return null;
+        }
     }
 }

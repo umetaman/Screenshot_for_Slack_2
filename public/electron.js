@@ -154,6 +154,12 @@ ipcMain.on("input-api-token", (event, arg) => {
     const CHANNEL_LIST_URL = "https://slack.com/api/channels.list";
     const TEAM_INFO_URL = "https://slack.com/api/team.info";
     
+    if(arg == ""){
+        console.log("Input token is blank.");
+        event.reply("receive-data", null);
+        return;
+    }
+
     let options = {
         url: "",
         formData: {
@@ -217,6 +223,6 @@ ipcMain.on("input-api-token", (event, arg) => {
         if(data.ok.teamInfo && data.ok.channelList){
             event.reply("receive-data", data);
         }
-    }, 1000);
+    }, 700);
     
 });

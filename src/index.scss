@@ -1,3 +1,5 @@
+// sass ./src/index.scss:./src/index.css --watch --style expanded
+
 *{
     box-sizing: border-box;
 }
@@ -8,7 +10,7 @@ html, body{
 }
 
 body{
-    background: #eeeeee;
+    background: #ffffff;
 }
 
 div#root > main#app{
@@ -24,7 +26,12 @@ div#root > main#app{
             margin-bottom: 20px;
             padding: 3px 10px;
             border-radius: 5px;
-            border: 2px red solid;
+            border: 2px #dddddd solid;
+            outline: 0;
+        }
+
+        input#input_token:focus{
+            border: 2px #ff9999 solid;
         }
     }
 

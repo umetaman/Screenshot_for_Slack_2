@@ -69,6 +69,13 @@ class App extends Component{
         console.log(this.state);
       }else{
         console.log("Received Null.");
+
+        //空のデータをセット
+        this.setState({
+          teamName: null,
+          teamIcon: null,
+          channels: []
+        });
       }
     }
 

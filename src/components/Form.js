@@ -25,6 +25,11 @@ export default class Form extends Component {
         this.props.handleBlur(event);
     }
 
+    handleFocus(event){
+        const inputField = document.getElementById("input_token");
+        inputField.select();
+    }
+
     componentDidMount(){
         this.setState({
             token: config.get("token")
@@ -44,6 +49,7 @@ export default class Form extends Component {
                     value={this.state.token}
                     onChange={this.handleChange}
                     onBlur={this.handleBlur}
+                    onFocus={this.handleFocus}
                     placeholder="Paste your Slack LegacyAPI token."
                     />
             </div>
