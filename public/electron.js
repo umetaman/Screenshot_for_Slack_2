@@ -1,3 +1,5 @@
+const SlackAPI = require("./SlackAPI.js");
+
 const electron = require("electron");
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
@@ -5,10 +7,13 @@ const globalShortcut = electron.globalShortcut;
 const Menu = electron.Menu;
 const Tray = electron.Tray;
 const ipcMain = electron.ipcMain;
+const desktopCapture = electron.desktopCapturer;
 
 const path = require("path");
 const isDev = require("electron-is-dev");
 const request = require("request");
+const os = require("os");
+const fs = require("fs");
 
 const Config = require("electron-config");
 const config = new Config();
@@ -41,7 +46,9 @@ function createWindow(){
     })
 
     mainWindow.on("close", (event) => {
+        event.preventDefault();
         sendSaveConfigSignal();
+        mainWindow.hide();
     })
 
     mainWindow.on("closed", (event) => {
@@ -63,7 +70,7 @@ function createTray(){
     //右クリックしたときのメニュー
     const trayMenu = Menu.buildFromTemplate([
         { label: "Setting", click: () => {
-            createWindow();
+            mainWindow.show();
         }},
         { label: "Quit", click: () => {
             isQuiting = true;
@@ -94,7 +101,9 @@ function createWindowMenu(){
 
 function sendSaveConfigSignal(){
     console.log("send save signal");
-    mainWindow.webContents.send("save-config", "save config.");
+    if(mainWindow.webContents != null){
+        mainWindow.webContents.send("save-config", "save config.");
+    }
 }
 
 app.on("ready", () => {
@@ -103,11 +112,21 @@ app.on("ready", () => {
         console.log(arg);
     })
 
+    ipcMain.on("upload-image-to-slack", (event, args) => {
+        const token = config.get("token");
+        const id = config.get("id");
+        const slack = new SlackAPI(token, id);
+        console.log(args);
+        slack.postImage(args.path, args.title, () => {
+            mainWindow.webContents.send("notify-screenshot", args.path);
+        });
+    })
+
     //ショートカットの作成
     globalShortcut.register(
         "CommandOrControl+Shift+M",
         () => {
-            mainWindow.webContents.send("ctrl-shift-m", "capture screen.");
+            mainWindow.webContents.send("capture-screen", "capture");
         }
     );
 
@@ -115,7 +134,7 @@ app.on("ready", () => {
     createTray();
 
     // 初期状態では非表示
-    mainWindow.hide();
+    // mainWindow.hide();
 });
 
 app.on("window-all-closed", () => {

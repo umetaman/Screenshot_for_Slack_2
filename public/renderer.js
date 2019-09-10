@@ -11,14 +11,6 @@ var path = window.nodeRequire("path");
 var request = window.nodeRequire("request");
 
 //===============================================
-// プロセス間通信でショートカットの信号を受け取ったらキャプチャ
-var ipcRenderer = electron.ipcRenderer;
-ipcRenderer.on("ctrl-shift-m", function (arg) {
-    console.log("caught shortcut command!");
-    saveScreenImage();
-});
-
-//===============================================
 //OSの通知
 function notifyScreenshot(msg, imagePath) {
     var _notifier = new Notification("Screenshot for Slack", {
@@ -31,94 +23,16 @@ function notifyScreenshot(msg, imagePath) {
         _shell.openItem(imagePath);
     };
 }
-var SlackAPI = /** @class */ (function () {
-    function SlackAPI(key, channelID) {
-        this.key = key;
-        this.channelID = channelID;
-        this.apiKey = "";
-        this.channelID = "";
-        this.apiKey = key;
-        this.channelID = channelID;
-    }
-    SlackAPI.prototype.postImage = function (imagePath, imageTitle) {
-        // 完全パスなのでファイル名だけ取り出す。
-        var splitedPath = imagePath.split("/");
-        var fileName = splitedPath[splitedPath.length - 1];
-        var options = {
-            url: SlackAPI.UPLOAD_URL,
-            formData: {
-                token: this.apiKey,
-                title: imageTitle,
-                filename: fileName,
-                filetype: "auto",
-                channels: this.channelID,
-                file: fs.createReadStream(imagePath)
-            }
-        };
-        request.post(options, function (error, response) {
-            if (error) {
-                console.log("Erorr by uploading file.");
-                return;
-            }
-            console.log(JSON.parse(response));
-        });
-    };
-    SlackAPI.UPLOAD_URL = "https://slack.com/api/files.upload";
-    return SlackAPI;
-}());
-function saveScreenImage() {
-    var savePath = "";
-    console.log("save image...");
-    // スクリーンショットの設定
-    // 画面サイズの取得
-    console.log(electron);
-    var _a = electron.remote.screen.getPrimaryDisplay().workAreaSize, width = _a.width, height = _a.height;
-    var options = {
-        types: ["screen"],
-        thumbnailSize: {
-            width: width,
-            height: height
-        }
-    };
-    //デスクトップを撮影
-    desktopCapture.getSources(options, function (error, sources) {
-        //エラーが来たらここで終わり
-        if (error) {
-            console.log("failed to get screen sources.");
-            return;
-        }
-        //取得したSourcesを総当たり
-        sources.forEach(function (source) {
-            console.log(source.name);
-            //メインスクリーン、または1番目のスクリーンをスクリーンショットとする
-            if (source.name == "Entire screen" || source.name == "Screen 1") {
-                // 保存するディレクトリの設定
-                var date = new Date();
-                var imageFileName_1 = "screenshot_" + date.getTime().toString() + ".png";
-                //OSが指定する一時ディレクトリ
-                savePath = path.join(os.tmpdir(), imageFileName_1);
-                //ファイルに書き込む
-                fs.writeFile(savePath, source.thumbnail.toPNG(), function (error) {
-                    if (error) {
-                        console.log(error);
-                        return;
-                    }
-                    
-                    const token = config.get("token");
-                    const id = config.get("id");
 
-                    var slack = new SlackAPI(token, id);
-                    slack.postImage(savePath, imageFileName_1);
-                    //通知を出すHTMLのAPI
-                    notifyScreenshot("Saved current main screen.", savePath);
-                    return savePath;
-                });
-            }
-        });
-    });
-    //ここまで来たらエラーなので、空の文字列を返す
-    return savePath;
-}
+//===============================================
+var ipcRenderer = electron.ipcRenderer;
+ipcRenderer.on("capture-screen", (event, arg) => {
+    saveScreenImage();
+})
+
+ipcRenderer.on("notify-screenshot", (event, arg) => {
+    notifyScreenshot("Saved current main screen.", arg);
+})
 
 let tokenObj, channelIdObj;
 
@@ -128,6 +42,65 @@ window.onload = () => {
     channelIdObj = document.channel_select_form;
 }
 
+function saveScreenImage(){
+    let savePath = "";
+    console.log("Save image...");
+
+    //スクリーンショットの設定
+    const screenSize = electron.remote.screen.getPrimaryDisplay().workAreaSize;
+    const options = {
+        types: ["screen"],
+        thumbnailSize: {
+            width: screenSize.width,
+            height: screenSize.height
+        }
+    };
+
+    //デスクトップを撮影
+    desktopCapture.getSources(options, (error, sources) => {
+        if(error){
+            console.log("failed to get screen sources.");
+            console.log(error);
+            return;
+        }
+
+        sources.forEach((source) => {
+            //メインスクリーン、または1番目のスクリーンを取得
+            if(source.name == "Entire screen" || source.name == "Screen 1"){
+                //保存するディレクトリを設定
+                const date = new Date();
+                const imageFileName = "screenshot_" + date.getTime().toString() + ".png";
+
+                //OSが指定する一時ディレクトリに保存
+                savePath = path.join(os.tmpdir(), imageFileName);
+
+                //ファイルに書き込む
+                fs.writeFile(savePath, source.thumbnail.toPNG(), (error) => {
+                    if(error){
+                        console.log(error);
+                        return;
+                    }
+
+                    //メインプロセスへ
+                    const uploadProps = {
+                        path: savePath,
+                        title: imageFileName
+                    };
+
+                    console.log(uploadProps);
+                    ipcRenderer.send("upload-image-to-slack", uploadProps);
+                    console.log("send save-signal to main process.");
+
+                    return savePath;
+                });
+            }
+        });
+    });
+
+    //文字列は返すけど、空の文字列
+    //ここまできたらエラー
+    return savePath;
+}
 
 //デバッグ
 ipcRenderer.on("debug-console-log", (event, arg) => {
