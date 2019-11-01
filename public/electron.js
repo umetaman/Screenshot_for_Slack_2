@@ -65,7 +65,7 @@ function createWindow(){
 }
 
 function createTray(){
-    mainTray = new Tray("public/logo192.png");
+    mainTray = new Tray(`file://${path.join(__dirname, "../build/logo192.png")}`);
 
     //右クリックしたときのメニュー
     const trayMenu = Menu.buildFromTemplate([
