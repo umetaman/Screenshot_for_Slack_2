@@ -32,17 +32,20 @@ class App extends Component{
   }
 
   handleBlur(event){
-    console.log(event.target.value);
+    console.log("[HandleBlur]: " + event.target.value);
     event.preventDefault();
     
     //Electron側に送信
     ipcRenderer.send("input-api-token", event.target.value);
+    console.log("token is send.");
   }
 
   componentWillMount(){
     //プロセス間通信で実行する処理を定義
     eventDispatcher = (data) => {
       if(data != null){
+        console.log(data);
+
         //配列の初期化
         this.state.channels.length = 0;
         
@@ -72,8 +75,8 @@ class App extends Component{
 
         //空のデータをセット
         this.setState({
-          teamName: null,
-          teamIcon: null,
+          teamName: "",
+          teamIcon: "",
           channels: []
         });
       }

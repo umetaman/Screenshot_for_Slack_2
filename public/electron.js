@@ -8,6 +8,7 @@ const Menu = electron.Menu;
 const Tray = electron.Tray;
 const ipcMain = electron.ipcMain;
 const desktopCapture = electron.desktopCapturer;
+const NativeImage = electron.nativeImage;
 
 const path = require("path");
 const isDev = require("electron-is-dev");
@@ -32,32 +33,33 @@ function createWindow(){
         }
     };
 
+    //mainWindowの表示と非表示を切り替える
     mainWindow = new BrowserWindow(options);
+
     // デバッグかどうか判断してURLを分ける
     // デバッグ中: ローカルサーバーを読み込む
     // アプリケーション: ビルドされたHTMLを読み込む
     mainWindow.loadURL(isDev ? "http://localhost:3000" : `file://${path.join(__dirname, "../build/index.html")}`);
     mainWindow.webContents.openDevTools();
 
+    //最小化
     mainWindow.on("minimize", (event) => {
-        event.preventDefault();
+        console.log("[EventHandler] Minimize window.");
         sendSaveConfigSignal();
         mainWindow.hide();
     })
 
     mainWindow.on("close", (event) => {
-        event.preventDefault();
+        console.log("[EventHandler] Close window.");
         sendSaveConfigSignal();
         mainWindow.hide();
+        if(isQuiting == false){
+            event.preventDefault();
+        }
     })
 
     mainWindow.on("closed", (event) => {
-        if(isQuiting == false){
-            event.preventDefault();
-            mainWindow = null;
-        }
-
-        return false;
+        console.log("[EventHandler] Closed window.");
     });
 
     //メニューバーの設定
@@ -65,18 +67,27 @@ function createWindow(){
 }
 
 function createTray(){
-    mainTray = new Tray(`file://${path.join(__dirname, "../build/logo192.png")}`);
+    const iconImage = NativeImage.createFromPath(path.join(__dirname, "Assets/cloudTemplate.png"));
+    mainTray = new Tray(iconImage);
 
-    //右クリックしたときのメニュー
+    //タスクトレイメニュー
     const trayMenu = Menu.buildFromTemplate([
         { label: "Setting", click: () => {
-            mainWindow.show();
+            if(mainWindow != null){
+                mainWindow.show();
+            }else{
+                createWindow();
+            }
         }},
-        { label: "Quit", click: () => {
-            isQuiting = true;
-            app.quit();
-            mainTray.destroy();
-        }}
+        {
+            label: "Quit",
+            //通常のアプリとは終了方法が違う。
+            click: () => {
+                sendSaveConfigSignal();
+                isQuiting = true;
+                app.quit();
+            }
+        }
     ]);
 
     mainTray.setToolTip("Screenshot for Slack 2");
@@ -98,16 +109,26 @@ function createWindowMenu(){
                 { role: "copy" },
                 { role: "paste"},
                 { type: "separator" },
-                { role: "quit" }
+                {
+                    label: "Quit",
+                    accelerator: "Command+Q",
+                    //通常のアプリとは終了方法が違う。
+                    click: () => {
+                        sendSaveConfigSignal();
+                        isQuiting = true;
+                        app.quit();
+                    }
+                }
             ]}
         ];
+
         const menuBar = Menu.buildFromTemplate(contextMenu);
         Menu.setApplicationMenu(menuBar);
     }
 }
 
 function sendSaveConfigSignal(){
-    console.log("send save signal");
+    console.log("[Save configuration.]");
     if(mainWindow.webContents != null){
         mainWindow.webContents.send("save-config", "save config.");
     }
@@ -139,12 +160,15 @@ app.on("ready", () => {
 
     createWindow();
     createTray();
-
-    // 初期状態では非表示
-    // mainWindow.hide();
 });
 
-app.on("window-all-closed", () => {
+app.on("will-quit", () => {
+    console.log("[EventHandler] Window will quit.");
+    isQuiting = true;
+});
+
+app.on("window-all-closed", (event) => {
+    console.log("[EventHandler] Window all closed.");
     if(process.platform !== "darwin"){
         app.quit();
     }

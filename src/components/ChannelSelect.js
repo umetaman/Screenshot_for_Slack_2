@@ -12,7 +12,13 @@ export default class ChannelSelect extends Component {
             teamIcon: props.teamIcon,
             channels: props.channels
         };
+
+        console.log(this.state);
         this.handleRadioClick = this.handleRadioClick.bind(this);
+    }
+
+    shouldComponentUpdate(){
+        return true;
     }
 
     handleRadioClick(event) {
@@ -34,9 +40,16 @@ export default class ChannelSelect extends Component {
         });
 
         config.set("id", newId);
+
+        console.log(`ChannelSelect: ${newId}`);
     }
 
     render() {
+        console.log("[ChannelSelect: State]");
+        console.log(this.state);
+        console.log("[ChannelSelect: Props]");
+        console.log(this.props);
+
         if(this.props.teamIcon != null && this.props.teamName != null && this.props.channels.length > 1){
             return (
                 <div className="channel-select-form-container">
@@ -47,6 +60,8 @@ export default class ChannelSelect extends Component {
                     <form name="channel_select_form" className="channel-select-form">
                         {
                             this.state.channels.map(channel => {
+                                console.log(channel);
+
                                 return (
                                     <label key={channel.id}>
                                         <input

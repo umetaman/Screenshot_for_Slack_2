@@ -30,7 +30,7 @@ class SlackAPI{
                 return;
             }
 
-            console.log("upload is Succeeded!");
+            console.log(`upload is Succeeded!¥nID: ${this.channelId}¥nworkSpace: ${this.token}`);
             onUploadFinish();
         });
     }
